@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shani Traders — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF8F2; --ink:#1B2430; --ledger-red:#9E2B25; --brass:#B08D57;
+    --slate:#5B6577; --line:#D8D2C4; --panel:#FFFFFF; --ok:#2E6B4F; --danger:#B23A34;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);}
+  header{
+    background:var(--ink);color:var(--paper);padding:18px 28px;
+    display:flex;align-items:center;justify-content:space-between;border-bottom:4px solid var(--ledger-red);
+  }
+  header h1{font-family:'Roboto Slab',serif;font-size:1.3rem;margin:0;}
+  .config-btn{
+    background:transparent;border:1px solid var(--brass);color:var(--brass);padding:6px 12px;
+    border-radius:4px;font-size:.8rem;cursor:pointer;font-family:'Inter',sans-serif;text-decoration:none;display:inline-block;
+  }
+  .config-btn:hover{background:var(--brass);color:var(--ink);}
+
+  .wrap{max-width:1000px;margin:0 auto;padding:20px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:18px;}
+  .card h2{font-family:'Roboto Slab',serif;font-size:1rem;margin:0 0 12px 0;border-bottom:2px solid var(--ledger-red);padding-bottom:8px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+  .field label{font-size:.75rem;color:var(--slate);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+  .field input, .field select, .field textarea{
+    padding:8px 10px;border:1px solid var(--line);border-radius:5px;font-size:.9rem;font-family:'Inter',sans-serif;
+  }
+  .field textarea{resize:vertical;min-height:52px;}
+  .hint{font-size:.72rem;color:var(--slate);margin-top:-4px;margin-bottom:10px;}
+  .save-btn{
+    background:var(--ledger-red);color:#fff;border:none;padding:10px 18px;border-radius:6px;
+    font-weight:700;cursor:pointer;font-family:'Roboto Slab',serif;
+  }
+  .save-btn:hover{background:#7f231e;}
+  .status-msg{font-size:.8rem;margin-top:8px;font-family:'IBM Plex Mono',monospace;}
+  .status-msg.ok{color:var(--ok);}
+
+  table.cat{width:100%;border-collapse:collapse;font-size:.85rem;}
+  table.cat th{
+    text-align:left;background:#F2EEE3;color:var(--slate);font-size:.68rem;text-transform:uppercase;
+    padding:7px 6px;border-bottom:1px solid var(--line);
+  }
+  table.cat td{padding:5px 4px;border-bottom:1px solid var(--line);}
+  table.cat input, table.cat select{width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;font-size:.82rem;}
+  .rm-btn{background:none;border:none;color:var(--danger);cursor:pointer;font-size:1.05rem;}
+  .row-actions{display:flex;gap:10px;margin-top:12px;align-items:center;}
+  .add-item-btn{
+    background:#fff;border:1px solid var(--ink);color:var(--ink);padding:8px 14px;border-radius:5px;
+    font-size:.82rem;cursor:pointer;font-weight:600;
+  }
+  .add-item-btn:hover{background:var(--ink);color:#fff;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SHANI TRADERS — Settings &amp; Item List</h1>
+  <a class="config-btn" href="invoice-billing.html">← Back to Billing</a>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>Shop Details</h2>
+    <div class="grid2">
+      <div class="field"><label>Shop Name</label><input id="cfgShopName"></div>
+      <div class="field"><label>GSTIN</label><input id="cfgGSTIN"></div>
+    </div>
+    <div class="field"><label>Address / Phone (one line each, shown under shop name on the invoice)</label>
+      <textarea id="cfgShopSub"></textarea>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Home State (used to decide CGST+SGST vs IGST)</label>
+        <select id="cfgHomeState"></select>
+      </div>
+      <div class="field"><label>Invoice Prefix (e.g. ST)</label><input id="cfgPrefix"></div>
+    </div>
+    <div class="field">
+      <label>Google Apps Script Web App URL</label>
+      <input id="cfgScriptUrl" placeholder="https://script.google.com/macros/s/XXXXX/exec">
+    </div>
+    <div class="hint">This connects the billing page to your Google Sheet — see Code.gs setup notes for how to get this URL.</div>
+    <button class="save-btn" onclick="saveConfig()">Save Settings</button>
+    <div id="cfgStatus" class="status-msg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Item List</h2>
+    <div class="hint">Rate = GST-inclusive selling price used as the default when this item is picked on the Billing page. Edits here save automatically when you click Save Item List.</div>
+    <table class="cat" id="catTable">
+      <thead><tr>
+        <th style="width:32%">Item Name</th><th style="width:12%">HSN</th><th style="width:12%">Unit</th>
+        <th style="width:16%">Rate ₹ (incl. GST)</th><th style="width:12%">GST%</th><th style="width:4%"></th>
+      </tr></thead>
+      <tbody id="catBody"></tbody>
+    </table>
+    <div class="row-actions">
+      <button class="add-item-btn" onclick="addCatalogRow()">+ Add Item</button>
+      <button class="save-btn" onclick="saveCatalog()">Save Item List</button>
+    </div>
+    <div id="catStatus" class="status-msg"></div>
+  </div>
+
+</div>
+
+<script>
+const DEFAULT_CONFIG = {
+  shopName: "SHANI TRADERS",
+  shopSub: "Main Road Patsendri, Saraipali, Mahasamund, C.G. 493558\nMob No. 9399893129",
+  gstin: "22HEPPP0273E1ZH",
+  homeState: "Chhattisgarh",
+  prefix: "ST",
+  scriptUrl: ""
+};
+const STATES = ["Chhattisgarh","Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Goa","Gujarat","Haryana",
+"Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram",
+"Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand",
+"West Bengal","Delhi","Jammu and Kashmir","Ladakh","Puducherry","Chandigarh"];
+const DEFAULT_ITEMS = [
+  {name:"Ultratech Cement (OPC 43)", hsn:"2523", unit:"BAG", rate:241.53, gst:18},
+  {name:"Ultratech Cement (PPC)", hsn:"2523", unit:"BAG", rate:235.00, gst:18},
+  {name:"Ambuja Cement", hsn:"2523", unit:"BAG", rate:238.00, gst:18},
+  {name:"ACC Cement", hsn:"2523", unit:"BAG", rate:236.00, gst:18},
+  {name:"TMT Bar 8mm", hsn:"7214", unit:"KG", rate:62.00, gst:18},
+  {name:"TMT Bar 10mm", hsn:"7214", unit:"KG", rate:60.00, gst:18},
+  {name:"TMT Bar 12mm", hsn:"7214", unit:"KG", rate:58.00, gst:18},
+  {name:"Red Bricks", hsn:"6901", unit:"PCS", rate:8.00, gst:5},
+  {name:"River Sand", hsn:"2505", unit:"CFT", rate:45.00, gst:5},
+  {name:"Stone Aggregate (Gitti)", hsn:"2517", unit:"CFT", rate:55.00, gst:5},
+  {name:"PVC Pipe 4 inch", hsn:"3917", unit:"PCS", rate:350.00, gst:18},
+  {name:"Emulsion Paint", hsn:"3208", unit:"LTR", rate:280.00, gst:18}
+];
+const UNITS = ["BAG","KG","PCS","CFT","LTR","MTR","NOS","TON","SQFT"];
+const GST_RATES = [0,5,12,18,28];
+
+function loadConfig(){ return JSON.parse(localStorage.getItem('billingConfig') || 'null') || DEFAULT_CONFIG; }
+function loadCatalog(){ return JSON.parse(localStorage.getItem('itemCatalog') || 'null') || DEFAULT_ITEMS; }
+
+function fillConfigForm(){
+  const cfg = loadConfig();
+  cfgShopName.value = cfg.shopName;
+  cfgShopSub.value = cfg.shopSub;
+  cfgGSTIN.value = cfg.gstin;
+  cfgHomeState.innerHTML = STATES.map(s => `<option ${s===cfg.homeState?'selected':''}>${s}</option>`).join('');
+  cfgPrefix.value = cfg.prefix;
+  cfgScriptUrl.value = cfg.scriptUrl;
+}
+function saveConfig(){
+  const cfg = {
+    shopName: cfgShopName.value.trim() || DEFAULT_CONFIG.shopName,
+    shopSub: cfgShopSub.value,
+    gstin: cfgGSTIN.value.trim(),
+    homeState: cfgHomeState.value,
+    prefix: cfgPrefix.value.trim() || "ST",
+    scriptUrl: cfgScriptUrl.value.trim()
+  };
+  localStorage.setItem('billingConfig', JSON.stringify(cfg));
+  cfgStatus.textContent = 'Settings saved.';
+  cfgStatus.className = 'status-msg ok';
+  setTimeout(() => cfgStatus.textContent = '', 3000);
+}
+
+let catRowCounter = 0;
+function addCatalogRow(item){
+  item = item || {name:'', hsn:'', unit:'BAG', rate:0, gst:18};
+  catRowCounter++;
+  const id = 'cr'+catRowCounter;
+  const tr = document.createElement('tr');
+  tr.id = id;
+  tr.innerHTML = `
+    <td><input class="c-name" value="${escapeHtml(item.name)}" placeholder="Item name"></td>
+    <td><input class="c-hsn" value="${escapeHtml(item.hsn)}" placeholder="HSN"></td>
+    <td><select class="c-unit">${UNITS.map(u=>`<option ${u===item.unit?'selected':''}>${u}</option>`).join('')}</select></td>
+    <td><input class="c-rate" type="number" min="0" step="0.01" value="${item.rate}"></td>
+    <td><select class="c-gst">${GST_RATES.map(g=>`<option value="${g}" ${g===item.gst?'selected':''}>${g}%</option>`).join('')}</select></td>
+    <td><button type="button" class="rm-btn" onclick="document.getElementById('${id}').remove()">✕</button></td>
+  `;
+  catBody.appendChild(tr);
+}
+function fillCatalogTable(){
+  catBody.innerHTML = '';
+  loadCatalog().forEach(addCatalogRow);
+}
+function saveCatalog(){
+  const items = [...document.querySelectorAll('#catBody tr')].map(tr => ({
+    name: tr.querySelector('.c-name').value.trim(),
+    hsn: tr.querySelector('.c-hsn').value.trim(),
+    unit: tr.querySelector('.c-unit').value,
+    rate: parseFloat(tr.querySelector('.c-rate').value) || 0,
+    gst: parseFloat(tr.querySelector('.c-gst').value) || 0
+  })).filter(it => it.name);
+  localStorage.setItem('itemCatalog', JSON.stringify(items));
+  catStatus.textContent = 'Item list saved (' + items.length + ' items).';
+  catStatus.className = 'status-msg ok';
+  setTimeout(() => catStatus.textContent = '', 3000);
+}
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+window.addEventListener('DOMContentLoaded', () => {
+  fillConfigForm();
+  fillCatalogTable();
+});
+</script>
+</body>
+</html>
