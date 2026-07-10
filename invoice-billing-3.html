@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shani Traders — Billing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --paper:#FBF8F2; --ink:#1B2430; --ledger-red:#9E2B25; --brass:#B08D57;
+    --slate:#5B6577; --line:#D8D2C4; --panel:#FFFFFF; --ok:#2E6B4F; --danger:#B23A34;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);}
+  header{
+    background:var(--ink);color:var(--paper);padding:18px 28px;
+    display:flex;align-items:center;justify-content:space-between;border-bottom:4px solid var(--ledger-red);
+  }
+  header h1{font-family:'Roboto Slab',serif;font-size:1.3rem;margin:0;letter-spacing:.3px;}
+  header .tag{color:var(--brass);font-size:.78rem;font-family:'IBM Plex Mono',monospace;}
+  .config-btn{
+    background:transparent;border:1px solid var(--brass);color:var(--brass);padding:6px 12px;border-radius:4px;
+    font-size:.8rem;cursor:pointer;font-family:'Inter',sans-serif;text-decoration:none;display:inline-block;
+  }
+  .config-btn:hover{background:var(--brass);color:var(--ink);}
+
+  .wrap{max-width:820px;margin:0 auto;padding:20px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:16px;}
+  .card h2{
+    font-family:'Roboto Slab',serif;font-size:1rem;margin:0 0 12px 0;color:var(--ink);
+    border-bottom:2px solid var(--ledger-red);padding-bottom:8px;
+  }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+  .field label{font-size:.75rem;color:var(--slate);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+  .field input, .field select{
+    padding:8px 10px;border:1px solid var(--line);border-radius:5px;font-size:.9rem;
+    font-family:'Inter',sans-serif;background:#fff;color:var(--ink);
+  }
+  .field input:focus, .field select:focus{outline:2px solid var(--brass);outline-offset:1px;}
+  .hint{font-size:.72rem;color:var(--slate);margin-top:-4px;margin-bottom:10px;}
+
+  table.items{width:100%;border-collapse:collapse;font-size:.85rem;}
+  table.items th{
+    text-align:left;background:#F2EEE3;color:var(--slate);font-size:.68rem;text-transform:uppercase;
+    letter-spacing:.3px;padding:7px 6px;border-bottom:1px solid var(--line);
+  }
+  table.items td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top;}
+  table.items input, table.items select{
+    width:100%;padding:9px 8px;border:1px solid var(--line);border-radius:4px;font-size:16px;font-family:'Inter',sans-serif;
+    min-height:42px;cursor:pointer;
+  }
+  table.items input{cursor:text;}
+  table.items .amt{font-family:'IBM Plex Mono',monospace;text-align:right;padding-right:8px;white-space:nowrap;padding-top:12px;}
+  table.items td.rm-cell{text-align:right;vertical-align:top;padding-top:6px;}
+  table.items .rm-btn{
+    background:none;border:none;color:var(--slate);cursor:pointer;font-size:.85rem;
+    opacity:.55;padding:3px 6px;border-radius:4px;line-height:1;
+  }
+  table.items .rm-btn:hover{opacity:1;color:var(--danger);background:#F7EAE9;}
+  .custom-sub{display:flex;gap:6px;align-items:center;margin-top:5px;}
+  .custom-sub input{width:64px !important;}
+  .mini-link{background:none;border:none;color:var(--brass);font-size:.72rem;cursor:pointer;text-decoration:underline;padding:0;}
+
+  .row-actions{display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap;}
+  .add-row-btn{
+    background:#fff;border:1px solid var(--ink);color:var(--ink);padding:7px 12px;border-radius:5px;
+    font-size:.78rem;cursor:pointer;font-weight:600;
+  }
+  .add-row-btn:hover{background:var(--ink);color:#fff;}
+
+  .total-line{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0 4px 0;}
+  .total-line .lbl{font-family:'Roboto Slab',serif;font-size:1rem;color:var(--slate);}
+  .total-line .val{font-family:'IBM Plex Mono',monospace;font-size:1.9rem;font-weight:700;color:var(--ledger-red);}
+  .next-inv{font-size:.72rem;color:var(--slate);margin-bottom:10px;}
+
+  .generate-btn{
+    width:100%;padding:14px;background:var(--ledger-red);color:#fff;border:none;border-radius:6px;
+    font-size:1rem;font-weight:700;cursor:pointer;font-family:'Roboto Slab',serif;letter-spacing:.4px;
+  }
+  .generate-btn:hover{background:#7f231e;}
+  .generate-btn:disabled{background:#ccc;cursor:not-allowed;}
+  .status-msg{font-size:.8rem;margin-top:8px;text-align:center;font-family:'IBM Plex Mono',monospace;}
+  .status-msg.ok{color:var(--ok);}
+  .status-msg.err{color:var(--danger);}
+
+  /* ---- PDF generation overlay (invoice is rendered here, on-screen, so html2canvas captures it correctly) ---- */
+  #pdfOverlay{
+    display:none;position:fixed;inset:0;background:rgba(27,36,48,.9);z-index:9999;
+    align-items:flex-start;justify-content:center;overflow:auto;padding:30px 12px;
+  }
+  #pdfOverlay .overlay-label{
+    position:fixed;top:14px;left:0;right:0;text-align:center;color:#fff;font-family:'IBM Plex Mono',monospace;
+    font-size:.85rem;letter-spacing:.5px;
+  }
+  #invoice{
+    width:780px;background:#fff;padding:34px 40px;font-family:'Inter',sans-serif;
+    color:var(--ink);font-size:.82rem;margin-top:34px;box-sizing:border-box;
+  }
+  .inv-topline{text-align:center;font-size:.72rem;letter-spacing:2px;color:var(--slate);margin-bottom:2px;}
+  .inv-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px double var(--ledger-red);padding-bottom:10px;margin-bottom:10px;}
+  .inv-shop-name{font-family:'Roboto Slab',serif;font-size:1.7rem;color:var(--ledger-red);margin:0;line-height:1;}
+  .inv-shop-sub{font-size:.72rem;color:var(--slate);margin-top:4px;line-height:1.5;}
+  .inv-meta{font-size:.75rem;text-align:right;line-height:1.6;}
+  .inv-meta b{color:var(--ink);}
+  .inv-parties{display:flex;justify-content:space-between;gap:20px;margin-bottom:12px;font-size:.78rem;}
+  .inv-parties .lbl{font-size:.65rem;text-transform:uppercase;color:var(--brass);font-weight:700;letter-spacing:.5px;}
+  table.inv-items{width:100%;border-collapse:collapse;font-size:.76rem;margin-bottom:10px;}
+  table.inv-items th{background:#F2EEE3;padding:6px 5px;text-align:left;border:1px solid var(--line);font-size:.65rem;text-transform:uppercase;}
+  table.inv-items td{padding:6px 5px;border:1px solid var(--line);}
+  table.inv-items td.num, table.inv-items th.num{text-align:right;font-family:'IBM Plex Mono',monospace;}
+  .inv-totals{margin-left:auto;width:60%;font-size:.8rem;}
+  .inv-totals div{display:flex;justify-content:space-between;padding:3px 0;}
+  .inv-totals .grand{border-top:2px solid var(--ink);font-weight:700;font-family:'IBM Plex Mono',monospace;font-size:.95rem;padding-top:6px;margin-top:4px;}
+  .inv-words{font-size:.76rem;margin:10px 0;font-style:italic;color:var(--slate);}
+  table.inv-breakup{width:100%;border-collapse:collapse;font-size:.7rem;margin-top:6px;}
+  table.inv-breakup th, table.inv-breakup td{border:1px solid var(--line);padding:4px 5px;text-align:right;}
+  table.inv-breakup th:first-child, table.inv-breakup td:first-child{text-align:left;}
+  .inv-terms{font-size:.68rem;color:var(--slate);margin-top:20px;line-height:1.6;}
+  .inv-sign{display:flex;justify-content:flex-end;margin-top:40px;}
+  .inv-sign div{text-align:center;font-size:.75rem;border-top:1px solid var(--ink);padding-top:6px;width:180px;}
+
+  /* ================= MOBILE OPTIMIZATION ================= */
+  @media (max-width:680px){
+    header{padding:12px 14px;}
+    header h1{font-size:1.02rem;}
+    header .tag{display:none;}
+    .config-btn{padding:7px 10px;font-size:.75rem;}
+
+    .wrap{padding:12px 12px 12px;}
+    .card{padding:14px 14px;margin-bottom:12px;border-radius:10px;}
+    .card h2{font-size:.92rem;}
+
+    .grid2{grid-template-columns:1fr;gap:0;}
+
+    /* Bigger tap targets, no iOS auto-zoom (16px min font on inputs) */
+    .field input, .field select,
+    table.items input, table.items select{
+      font-size:16px;padding:11px 10px;min-height:44px;
+    }
+    .add-row-btn{min-height:44px;padding:10px 14px;font-size:.85rem;}
+
+    /* Turn each item row into a stacked card instead of a cramped table row */
+    table.items thead{display:none;}
+    table.items, table.items tbody, table.items tr, table.items td{display:block;width:100%;}
+    table.items{border:none;}
+    table.items tr{
+      position:relative;border:1px solid var(--line);border-radius:10px;
+      padding:12px 12px 10px 12px;margin-bottom:12px;background:#FEFDFB;
+    }
+    table.items td{border:none;padding:5px 0;}
+    table.items td.rownum{display:none;}
+    table.items td.item-cell{padding-top:0;padding-right:34px;}
+    table.items td.rm-cell{position:absolute;top:8px;right:8px;padding:0;}
+    table.items .rm-btn{font-size:1rem;padding:4px 7px;opacity:.5;}
+
+    table.items td[data-label]::before{
+      content:attr(data-label);display:block;font-size:.65rem;text-transform:uppercase;
+      color:var(--slate);margin-bottom:3px;font-weight:700;letter-spacing:.3px;
+    }
+    table.items td.qty-cell, table.items td.rate-cell, table.items td.amount-cell{
+      float:left;width:31.3%;margin-right:3%;box-sizing:border-box;padding-top:8px;
+    }
+    table.items td.amount-cell{margin-right:0;}
+    table.items td.amount-cell .f-amount{
+      padding:11px 10px;background:#F2EEE3;border-radius:5px;font-size:.9rem;min-height:44px;
+      display:flex;align-items:center;
+    }
+    table.items tr::after{content:"";display:block;clear:both;}
+    .custom-sub{flex-wrap:wrap;}
+
+    /* Keep the total + generate button reachable at the bottom of the screen */
+    .total-card{
+      position:sticky;bottom:0;z-index:50;box-shadow:0 -6px 16px rgba(27,36,48,.12);
+      border-radius:12px 12px 0 0;padding-bottom:calc(14px + env(safe-area-inset-bottom));
+    }
+    .total-line .val{font-size:1.6rem;}
+    .generate-btn{min-height:50px;font-size:.95rem;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>SHANI TRADERS — Billing Console</h1>
+    <span class="tag">GST Invoice Generator</span>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a class="config-btn" href="invoices.html">🧾 History</a>
+    <a class="config-btn" href="master.html">⚙ Settings &amp; Items</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="card" id="pendingBanner" style="display:none;border-color:var(--brass);">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:.85rem;">⚠ <b id="pendingCount">0</b> invoice(s) saved on this device only — not yet in the Google Sheet.</span>
+      <button class="add-row-btn" onclick="retryPendingSync()">Retry Sync</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Buyer Details</h2>
+    <div class="field" id="savedCustomerField" style="display:none;">
+      <label>Saved Customer</label>
+      <select id="savedCustomer" onchange="onSavedCustomerChange()"></select>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Buyer Name</label><input id="buyerName" placeholder="e.g. Gram Panchayat"></div>
+      <div class="field"><label>Mobile No.</label><input id="buyerMobile" placeholder="10-digit mobile"></div>
+    </div>
+    <div class="field"><label>Address</label><input id="buyerAddress" placeholder="Village / Town, District"></div>
+    <div class="grid2">
+      <div class="field"><label>GSTIN / UIN (optional)</label><input id="buyerGSTIN" placeholder="22ABCDE0000F1Z0"></div>
+      <div class="field">
+        <label>Place of Supply</label>
+        <select id="placeOfSupply"></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Items (max 10)</h2>
+    <table class="items">
+      <thead>
+        <tr>
+          <th style="width:5%">#</th>
+          <th style="width:44%">Item</th>
+          <th style="width:12%">Qty</th>
+          <th style="width:20%">Rate ₹</th>
+          <th style="width:16%">Amount ₹</th>
+          <th style="width:3%"></th>
+        </tr>
+      </thead>
+      <tbody id="itemsBody"></tbody>
+    </table>
+    <div class="row-actions">
+      <button class="add-row-btn" onclick="addRow()">+ Add Row</button>
+      <span style="font-size:.72rem;color:var(--slate);">Click an item box to pick from your item list. Full item list is managed on the Settings page.</span>
+    </div>
+  </div>
+
+  <div class="card total-card" id="totalCard">
+    <div class="total-line"><span class="lbl">Total Amount</span><span class="val" id="sTotal">₹ 0.00</span></div>
+    <div class="next-inv">Invoice No: <b id="sInvNo">(auto)</b></div>
+    <button class="generate-btn" id="genBtn" onclick="generateBill()">Generate Bill (Save + Download PDF)</button>
+    <div id="statusMsg" class="status-msg"></div>
+  </div>
+</div>
+
+<!-- PDF generation overlay: the invoice is rendered here, visibly, right before capture, then removed -->
+<div id="pdfOverlay">
+  <div class="overlay-label">Generating PDF…</div>
+  <div id="invoice">
+    <div class="inv-topline">TAX INVOICE</div>
+    <div class="inv-head">
+      <div>
+        <p class="inv-shop-name" id="pShopName">SHANI TRADERS</p>
+        <div class="inv-shop-sub" id="pShopSub"></div>
+      </div>
+      <div class="inv-meta">
+        <div>Invoice No: <b id="pInvNo">(auto)</b></div>
+        <div>Invoice Date: <b id="pDate">—</b></div>
+        <div>Place of Supply: <b id="pPOS">Chhattisgarh</b></div>
+      </div>
+    </div>
+    <div class="inv-parties">
+      <div>
+        <div class="lbl">Bill To</div>
+        <div id="pBuyerName">—</div>
+        <div id="pBuyerAddress" style="color:var(--slate);"></div>
+        <div id="pBuyerMobile" style="color:var(--slate);"></div>
+        <div id="pBuyerGSTIN" style="color:var(--slate);"></div>
+      </div>
+    </div>
+    <table class="inv-items">
+      <thead><tr>
+        <th style="width:5%">S.No</th><th>Description</th><th style="width:10%">HSN</th>
+        <th class="num" style="width:8%">Qty</th><th style="width:8%">Unit</th>
+        <th class="num" style="width:12%">Rate (incl. GST)</th><th class="num" style="width:8%">GST%</th>
+        <th class="num" style="width:14%">Amount</th>
+      </tr></thead>
+      <tbody id="pItemsBody"><tr><td colspan="8" style="text-align:center;color:var(--slate);">No items yet</td></tr></tbody>
+    </table>
+    <div class="inv-totals" id="pTotals"></div>
+    <div class="inv-words" id="pWords"></div>
+    <table class="inv-breakup"><thead><tr><th>Rate</th><th>Taxable</th><th>CGST</th><th>SGST</th><th>IGST</th><th>Total</th></tr></thead>
+      <tbody id="pBreakup"></tbody>
+    </table>
+    <div class="inv-terms">
+      Terms &amp; Conditions:<br>
+      1) Risk and title of goods pass to buyer upon delivery.<br>
+      2) Any discrepancy must be reported within 48 hrs of delivery.<br>
+      3) Subject to local jurisdiction only.
+    </div>
+    <div class="inv-sign"><div>For SHANI TRADERS<br>Authorised Signatory</div></div>
+  </div>
+</div>
+
+<script>
+/* ================= LOCKED CONFIG =================
+   Shop details and the Google Sheet URL are fixed here in the code — see
+   the matching note in master.html if these ever need to change. */
+const CONFIG = {
+  shopName: "SHANI TRADERS",
+  shopSub: "Main Road Patsendri, Saraipali, Mahasamund, C.G. 493558\nMob No. 9399893129",
+  gstin: "22HEPPP0273E1ZH",
+  homeState: "Chhattisgarh",
+  prefix: "ST",
+  scriptUrl: "https://script.google.com/macros/s/AKfycbw0XU2o_knZz8sgta_wgpHcfeTOe16ux0HhqK0AHRpmlGSXqETTCoeGXNKdHELTQzcUfA/exec"
+};
+
+const STATES = ["Chhattisgarh","Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Goa","Gujarat","Haryana",
+"Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram",
+"Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand",
+"West Bengal","Delhi","Jammu and Kashmir","Ladakh","Puducherry","Chandigarh"];
+
+const DEFAULT_ITEMS = [
+  {name:"Ultratech Cement (OPC 43)", hsn:"2523", unit:"BAG", rate:241.53, gst:18},
+  {name:"Ultratech Cement (PPC)", hsn:"2523", unit:"BAG", rate:235.00, gst:18},
+  {name:"Ambuja Cement", hsn:"2523", unit:"BAG", rate:238.00, gst:18},
+  {name:"ACC Cement", hsn:"2523", unit:"BAG", rate:236.00, gst:18},
+  {name:"TMT Bar 8mm", hsn:"7214", unit:"KG", rate:62.00, gst:18},
+  {name:"TMT Bar 10mm", hsn:"7214", unit:"KG", rate:60.00, gst:18},
+  {name:"TMT Bar 12mm", hsn:"7214", unit:"KG", rate:58.00, gst:18},
+  {name:"Red Bricks", hsn:"6901", unit:"PCS", rate:8.00, gst:5},
+  {name:"River Sand", hsn:"2505", unit:"CFT", rate:45.00, gst:5},
+  {name:"Stone Aggregate (Gitti)", hsn:"2517", unit:"CFT", rate:55.00, gst:5},
+  {name:"PVC Pipe 4 inch", hsn:"3917", unit:"PCS", rate:350.00, gst:18},
+  {name:"Emulsion Paint", hsn:"3208", unit:"LTR", rate:280.00, gst:18}
+];
+function loadCatalog(){ return JSON.parse(localStorage.getItem('itemCatalog') || 'null') || DEFAULT_ITEMS; }
+let ITEM_CATALOG = loadCatalog();
+let CUSTOMERS = [];
+
+async function refreshItemCatalogFromSheet(){
+  if(!CONFIG.scriptUrl) return;
+  try{
+    const res = await fetch(CONFIG.scriptUrl + '?action=items');
+    const data = await res.json();
+    if(data.items && data.items.length){
+      ITEM_CATALOG = data.items;
+      localStorage.setItem('itemCatalog', JSON.stringify(ITEM_CATALOG)); // offline cache
+      // Refresh any select boxes already on the page that haven't been touched yet
+      document.querySelectorAll('.f-item-select').forEach(sel => {
+        const tr = sel.closest('tr');
+        if(tr && tr.dataset.mode === 'catalog' && !tr.dataset.name){ sel.innerHTML = itemSelectOptions(''); }
+      });
+    }
+  }catch(err){ /* offline / not configured — keep local cache */ }
+}
+
+async function loadSavedCustomers(){
+  if(!CONFIG.scriptUrl) return;
+  try{
+    const res = await fetch(CONFIG.scriptUrl + '?action=customers');
+    const data = await res.json();
+    CUSTOMERS = data.customers || [];
+    if(CUSTOMERS.length){
+      savedCustomerField.style.display = '';
+      savedCustomer.innerHTML = '<option value="">— New customer —</option>' +
+        CUSTOMERS.map((c,i) => `<option value="${i}">${escapeHtml(c.name)}${c.mobile? ' ('+escapeHtml(c.mobile)+')':''}</option>`).join('');
+    }
+  }catch(err){ /* silent */ }
+}
+function onSavedCustomerChange(){
+  const idx = savedCustomer.value;
+  if(idx === '') return;
+  const c = CUSTOMERS[parseInt(idx,10)];
+  if(!c) return;
+  buyerName.value = c.name || '';
+  buyerMobile.value = c.mobile || '';
+  buyerAddress.value = c.address || '';
+  buyerGSTIN.value = c.gstin || '';
+  recalcAll();
+}
+
+function refreshPlaceOfSupply(){
+  placeOfSupply.innerHTML = STATES.map(s => `<option ${s===CONFIG.homeState?'selected':''}>${s}</option>`).join('');
+}
+function refreshPreviewHeader(){
+  pShopName.textContent = CONFIG.shopName;
+  pShopSub.innerHTML = escapeHtml(CONFIG.shopSub).replace(/\n/g,'<br>') + (CONFIG.gstin ? `<br>GSTIN/UIN - ${escapeHtml(CONFIG.gstin)}` : '');
+}
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ================= ITEM ROWS ================= */
+let rowCounter = 0;
+function itemSelectOptions(selectedIdx){
+  let html = `<option value="" ${selectedIdx===''?'selected':''}>— Select item —</option>`;
+  ITEM_CATALOG.forEach((it,idx) => {
+    html += `<option value="${idx}" ${selectedIdx!=='' && idx===Number(selectedIdx)?'selected':''}>${escapeHtml(it.name)}</option>`;
+  });
+  html += `<option value="__custom__">+ New / custom item…</option>`;
+  return html;
+}
+function addRow(){
+  const tbody = document.getElementById('itemsBody');
+  if(tbody.children.length >= 10){ alert('Maximum 10 items per invoice.'); return; }
+  rowCounter++;
+  const id = 'row'+rowCounter;
+  const tr = document.createElement('tr');
+  tr.id = id;
+  tr.dataset.mode = 'catalog';
+  tr.dataset.hsn = '';
+  tr.dataset.unit = 'PCS';
+  tr.dataset.gst = '18';
+  tr.dataset.name = '';
+  tr.innerHTML = `
+    <td class="rownum">${tbody.children.length+1}</td>
+    <td class="item-cell"><select class="f-item-select" onchange="onItemSelectChange('${id}', this.value)">${itemSelectOptions('')}</select></td>
+    <td class="qty-cell" data-label="Qty"><input class="f-qty" type="number" min="0" step="any" value="1" oninput="recalcAll()"></td>
+    <td class="rate-cell" data-label="Rate ₹"><input class="f-rate" type="number" min="0" step="0.01" value="0" oninput="recalcAll()"></td>
+    <td class="amt f-amount amount-cell" data-label="Amount ₹">0.00</td>
+    <td class="rm-cell"><button type="button" class="rm-btn" title="Remove row" onclick="removeRow('${id}')">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  renumberRows();
+  recalcAll();
+}
+function removeRow(id){ document.getElementById(id).remove(); renumberRows(); recalcAll(); }
+function renumberRows(){
+  [...document.querySelectorAll('#itemsBody tr')].forEach((tr,i)=>{ tr.querySelector('.rownum').textContent = i+1; });
+}
+function onItemSelectChange(id, value){
+  const tr = document.getElementById(id);
+  const cell = tr.querySelector('.item-cell');
+  if(value === '__custom__'){
+    tr.dataset.mode = 'custom';
+    tr.dataset.hsn = '';
+    tr.dataset.unit = 'PCS';
+    cell.innerHTML = `
+      <input class="f-name" placeholder="Item name" oninput="onCustomNameInput('${id}')">
+      <div class="custom-sub">
+        <label style="font-size:.68rem;color:var(--slate);">GST%</label>
+        <input class="f-gst-custom" type="number" min="0" max="28" step="1" value="18" oninput="onCustomGstInput('${id}')">
+        <button type="button" class="mini-link" onclick="revertToSelect('${id}')">↺ choose from list</button>
+      </div>`;
+    tr.dataset.gst = '18';
+    recalcAll();
+  } else if(value === ''){
+    tr.dataset.mode = 'catalog'; tr.dataset.name=''; tr.dataset.hsn=''; tr.dataset.unit='PCS'; tr.dataset.gst='18';
+    recalcAll();
+  } else {
+    const it = ITEM_CATALOG[parseInt(value,10)];
+    if(it){
+      tr.dataset.mode = 'catalog';
+      tr.dataset.name = it.name;
+      tr.dataset.hsn = it.hsn;
+      tr.dataset.unit = it.unit;
+      tr.dataset.gst = it.gst;
+      tr.querySelector('.f-rate').value = it.rate;
+    }
+    recalcAll();
+  }
+}
+function onCustomNameInput(id){ document.getElementById(id).dataset.name = document.getElementById(id).querySelector('.f-name').value.trim(); recalcAll(); }
+function onCustomGstInput(id){ document.getElementById(id).dataset.gst = document.getElementById(id).querySelector('.f-gst-custom').value || '0'; recalcAll(); }
+function revertToSelect(id){
+  const tr = document.getElementById(id);
+  tr.dataset.mode = 'catalog'; tr.dataset.name=''; tr.dataset.hsn=''; tr.dataset.unit='PCS'; tr.dataset.gst='18';
+  tr.querySelector('.item-cell').innerHTML = `<select class="f-item-select" onchange="onItemSelectChange('${id}', this.value)">${itemSelectOptions('')}</select>`;
+  recalcAll();
+}
+
+/* ================= CALCULATIONS (rate is GST-inclusive; tax is reverse-calculated) ================= */
+function collectRows(){
+  return [...document.querySelectorAll('#itemsBody tr')].map(tr => {
+    const mode = tr.dataset.mode;
+    let name, hsn, unit, gst;
+    if(mode === 'custom'){
+      name = tr.querySelector('.f-name') ? tr.querySelector('.f-name').value.trim() : '';
+      hsn = ''; unit = 'PCS';
+      gst = parseFloat(tr.querySelector('.f-gst-custom') ? tr.querySelector('.f-gst-custom').value : tr.dataset.gst) || 0;
+    } else {
+      name = tr.dataset.name || '';
+      hsn = tr.dataset.hsn || '';
+      unit = tr.dataset.unit || 'PCS';
+      gst = parseFloat(tr.dataset.gst) || 0;
+    }
+    const qty = parseFloat(tr.querySelector('.f-qty').value) || 0;
+    const rate = parseFloat(tr.querySelector('.f-rate').value) || 0;
+    const amount = qty * rate;
+    const taxable = gst > 0 ? amount / (1 + gst / 100) : amount;
+    const gstAmt = amount - taxable;
+    return {name, hsn, qty, unit, rate, gst, amount, taxable, gstAmt};
+  }).filter(r => r.name && r.qty > 0);
+}
+function isIntrastate(){
+  return (placeOfSupply.value || '').trim().toLowerCase() === CONFIG.homeState.trim().toLowerCase();
+}
+function computeTotals(rows){
+  const intrastate = isIntrastate();
+  let taxable = 0, cgst = 0, sgst = 0, igst = 0, rawTotal = 0;
+  const byRate = {};
+  rows.forEach(r => {
+    let rC=0, rS=0, rI=0;
+    if(intrastate){ rC = r.gstAmt/2; rS = r.gstAmt/2; } else { rI = r.gstAmt; }
+    taxable += r.taxable; cgst += rC; sgst += rS; igst += rI; rawTotal += r.amount;
+    if(!byRate[r.gst]) byRate[r.gst] = {taxable:0,cgst:0,sgst:0,igst:0};
+    byRate[r.gst].taxable += r.taxable;
+    byRate[r.gst].cgst += rC; byRate[r.gst].sgst += rS; byRate[r.gst].igst += rI;
+  });
+  const total = Math.round(rawTotal);
+  const roundOff = +(total - rawTotal).toFixed(2);
+  return {intrastate, taxable, cgst, sgst, igst, roundOff, total, byRate};
+}
+function inWords(num){
+  num = Math.round(num);
+  if(num === 0) return 'Zero';
+  const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen',
+    'Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  function two(n){ if(n<20) return a[n]; return b[Math.floor(n/10)] + (n%10? ' '+a[n%10]:''); }
+  function three(n){ if(n>99) return a[Math.floor(n/100)] + ' Hundred' + (n%100? ' '+two(n%100):''); return two(n); }
+  let n = num, str = '';
+  const crore = Math.floor(n/10000000); n%=10000000;
+  const lakh = Math.floor(n/100000); n%=100000;
+  const thousand = Math.floor(n/1000); n%=1000;
+  const hundred = n;
+  if(crore) str += three(crore) + ' Crore ';
+  if(lakh) str += three(lakh) + ' Lakh ';
+  if(thousand) str += three(thousand) + ' Thousand ';
+  if(hundred) str += three(hundred);
+  return str.trim();
+}
+
+function recalcAll(){
+  const rows = collectRows();
+  [...document.querySelectorAll('#itemsBody tr')].forEach(tr => {
+    const qty = parseFloat(tr.querySelector('.f-qty').value) || 0;
+    const rate = parseFloat(tr.querySelector('.f-rate').value) || 0;
+    tr.querySelector('.f-amount').textContent = (qty*rate).toFixed(2);
+  });
+  const t = computeTotals(rows);
+  sTotal.textContent = '₹ ' + t.total.toFixed(2);
+}
+
+/* ================= FULL INVOICE TEMPLATE (built only for PDF) ================= */
+function renderFullInvoice(rows, t, invoiceNo, dateStr){
+  pInvNo.textContent = invoiceNo;
+  pDate.textContent = dateStr;
+  pPOS.textContent = placeOfSupply.value;
+  pBuyerName.textContent = buyerName.value.trim() || '—';
+  pBuyerAddress.textContent = buyerAddress.value.trim();
+  pBuyerMobile.textContent = buyerMobile.value.trim() ? ('Mob: ' + buyerMobile.value.trim()) : '';
+  pBuyerGSTIN.textContent = buyerGSTIN.value.trim() ? ('GSTIN: ' + buyerGSTIN.value.trim()) : '';
+
+  pItemsBody.innerHTML = rows.map((r,i) => `
+    <tr>
+      <td>${i+1}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.hsn)}</td>
+      <td class="num">${r.qty}</td><td>${r.unit}</td>
+      <td class="num">${r.rate.toFixed(2)}</td><td class="num">${r.gst}%</td>
+      <td class="num">${r.amount.toFixed(2)}</td>
+    </tr>`).join('');
+
+  let totalsHtml = `<div><span>Taxable Value</span><span>₹ ${t.taxable.toFixed(2)}</span></div>`;
+  if(t.intrastate){
+    totalsHtml += `
+    <div><span>Output CGST</span><span>₹ ${t.cgst.toFixed(2)}</span></div>
+    <div><span>Output SGST</span><span>₹ ${t.sgst.toFixed(2)}</span></div>`;
+  } else {
+    totalsHtml += `<div><span>Output IGST</span><span>₹ ${t.igst.toFixed(2)}</span></div>`;
+  }
+  totalsHtml += `
+    <div><span>Round Off</span><span>₹ ${t.roundOff.toFixed(2)}</span></div>
+    <div class="grand"><span>TOTAL</span><span>₹ ${t.total.toFixed(2)}</span></div>`;
+  pTotals.innerHTML = totalsHtml;
+  pWords.textContent = `Total amount (in words) — Rupees ${inWords(t.total)} Only`;
+
+  const rates = Object.keys(t.byRate).sort((a,b)=>a-b);
+  pBreakup.innerHTML = rates.map(rate => {
+    const d = t.byRate[rate];
+    const tot = d.taxable + d.cgst + d.sgst + d.igst;
+    return `<tr><td>${rate}%</td><td>₹${d.taxable.toFixed(2)}</td><td>${t.intrastate?'₹'+d.cgst.toFixed(2):'-'}</td><td>${t.intrastate?'₹'+d.sgst.toFixed(2):'-'}</td><td>${!t.intrastate?'₹'+d.igst.toFixed(2):'-'}</td><td>₹${tot.toFixed(2)}</td></tr>`;
+  }).join('');
+}
+
+/* ================= LOCAL SAFETY NET FOR INVOICES =================
+   If the Google Sheet can't be reached when a bill is generated, the invoice
+   is still saved on this device (never lost) and queued to sync later. */
+function loadPendingInvoices(){ return JSON.parse(localStorage.getItem('pendingInvoices') || '[]'); }
+function savePendingInvoices(arr){ localStorage.setItem('pendingInvoices', JSON.stringify(arr)); }
+function refreshPendingBanner(){
+  const n = loadPendingInvoices().length;
+  pendingBanner.style.display = n > 0 ? '' : 'none';
+  pendingCount.textContent = n;
+}
+async function trySaveInvoice_(payload){
+  try{
+    const res = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    return data.success ? data : false;
+  }catch(err){ return false; }
+}
+async function retryPendingSync(){
+  const pending = loadPendingInvoices();
+  if(!pending.length) return;
+  flashStatus('Syncing ' + pending.length + ' pending invoice(s)…', '');
+  const remaining = [];
+  let synced = 0;
+  for(const inv of pending){
+    const ok = await trySaveInvoice_(inv);
+    if(ok) synced++; else remaining.push(inv);
+  }
+  savePendingInvoices(remaining);
+  refreshPendingBanner();
+  flashStatus(synced + ' invoice(s) synced to Google Sheet.' + (remaining.length ? ' ' + remaining.length + ' still pending.' : ''), remaining.length ? 'err' : 'ok');
+}
+
+/* ================= INVOICE NUMBER (Google Sheet) ================= */
+async function fetchNextInvoiceNo(){
+  sInvNo.textContent = '(auto)';
+  if(!CONFIG.scriptUrl) return;
+  try{
+    const res = await fetch(CONFIG.scriptUrl);
+    const data = await res.json();
+    if(data.invoiceNo) sInvNo.textContent = data.invoiceNo + ' (next)';
+  }catch(err){ /* silent - sheet may not be configured yet */ }
+}
+
+/* ================= GENERATE BILL ================= */
+function flashStatus(msg, cls){ statusMsg.textContent = msg; statusMsg.className = 'status-msg ' + (cls || ''); }
+
+async function generateBill(){
+  const rows = collectRows();
+  if(!buyerName.value.trim()){ flashStatus('Please enter buyer name.', 'err'); buyerName.focus(); return; }
+  if(rows.length === 0){ flashStatus('Add at least one item.', 'err'); return; }
+
+  const t = computeTotals(rows);
+  const today = new Date();
+  const dateStr = String(today.getDate()).padStart(2,'0') + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + today.getFullYear();
+
+  const payload = {
+    date: dateStr,
+    buyerName: buyerName.value.trim(),
+    buyerAddress: buyerAddress.value.trim(),
+    buyerMobile: buyerMobile.value.trim(),
+    buyerGSTIN: buyerGSTIN.value.trim(),
+    placeOfSupply: placeOfSupply.value,
+    vehicleNo: '',
+    items: rows,
+    taxableValue: +t.taxable.toFixed(2),
+    cgst: +t.cgst.toFixed(2),
+    sgst: +t.sgst.toFixed(2),
+    igst: +t.igst.toFixed(2),
+    roundOff: t.roundOff,
+    total: t.total,
+    totalInWords: 'Rupees ' + inWords(t.total) + ' Only'
+  };
+
+  let invoiceNo = 'DRAFT-' + Date.now();
+  genBtn.disabled = true;
+
+  flashStatus('Saving to Google Sheet…', '');
+  const result = await trySaveInvoice_(payload);
+  if(result){
+    invoiceNo = result.invoiceNo;
+    flashStatus('Saved as ' + invoiceNo + '. Generating PDF…', 'ok');
+  } else {
+    // Never lose the sale — keep it on this device and let Retry Sync pick it up later
+    const pending = loadPendingInvoices();
+    pending.push(payload);
+    savePendingInvoices(pending);
+    refreshPendingBanner();
+    flashStatus('Could not reach Google Sheet — invoice saved on this device only. It will sync automatically via "Retry Sync" above. Generating PDF…', 'err');
+  }
+
+  refreshPreviewHeader();
+  renderFullInvoice(rows, t, invoiceNo, dateStr);
+
+  // Show the invoice on-screen (in the overlay) so html2canvas captures it exactly as laid out
+  pdfOverlay.style.display = 'flex';
+  pdfOverlay.scrollTop = 0;
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); // wait for full paint
+
+  const el = document.getElementById('invoice');
+  await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    windowWidth: el.scrollWidth,
+    windowHeight: el.scrollHeight
+  }).then(canvas => {
+    const JsPDFCtor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    const pdf = new JsPDFCtor({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 8; // mm on each side
+    const maxW = pageWidth - margin * 2;
+    const maxH = pageHeight - margin * 2;
+
+    // Scale the whole invoice to fit on exactly one page, preserving its aspect ratio
+    const ratio = canvas.width / canvas.height;
+    let renderW = maxW;
+    let renderH = renderW / ratio;
+    if (renderH > maxH) {
+      renderH = maxH;
+      renderW = renderH * ratio;
+    }
+    const x = (pageWidth - renderW) / 2;
+    const y = margin;
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+    pdf.addImage(imgData, 'JPEG', x, y, renderW, renderH);
+    pdf.save(invoiceNo + '.pdf');
+  });
+
+  pdfOverlay.style.display = 'none';
+  genBtn.disabled = false;
+  flashStatus('Bill ' + invoiceNo + ' generated. PDF downloaded.', 'ok');
+  fetchNextInvoiceNo();
+}
+
+/* ================= BOOT ================= */
+window.addEventListener('DOMContentLoaded', () => {
+  refreshPlaceOfSupply();
+  refreshPreviewHeader();
+  [buyerName, buyerAddress, buyerMobile, buyerGSTIN].forEach(el => el.addEventListener('input', recalcAll));
+  placeOfSupply.addEventListener('change', recalcAll);
+  addRow(); addRow(); addRow();
+  fetchNextInvoiceNo();
+  refreshItemCatalogFromSheet();
+  loadSavedCustomers();
+  refreshPendingBanner();
+  retryPendingSync(); // best-effort silent sync of anything queued from a previous offline session
+});
+window.addEventListener('storage', (e) => {
+  if(e.key === 'itemCatalog'){ ITEM_CATALOG = loadCatalog(); }
+});
+</script>
+</body>
+</html>
