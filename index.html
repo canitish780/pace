@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, minimum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#1B2430">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shani Traders">
+<meta name="description" content="GST billing for Shani Traders — install it on your phone and bill offline.">
+<title>Shani Traders</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBF8F2; --ink:#1B2430; --ledger-red:#9E2B25; --brass:#B08D57;
+  --slate:#5B6577; --line:#D8D2C4; --panel:#FFFFFF; --ok:#2E6B4F; --danger:#B23A34;
+  --shade:#F2EEE3;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{max-width:100%;}
+body{
+  margin:0;min-height:100dvh;font-family:'Inter',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);overflow-x:clip;
+  touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%;
+}
+button,input,select,textarea{font-family:inherit;color:inherit;font-size:16px;}
+button{cursor:pointer;}
+button:active{transform:scale(.98);}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+.hidden{display:none!important;}
+
+/* ================= WELCOME ================= */
+#welcome{
+  min-height:100dvh;background:var(--ink);color:var(--paper);
+  display:flex;flex-direction:column;
+  padding:calc(14px + var(--safe-t)) 20px calc(26px + var(--safe-b));
+}
+.top{display:flex;justify-content:flex-end;}
+.gear{
+  background:transparent;border:1px solid rgba(176,141,87,.55);color:var(--brass);
+  border-radius:999px;padding:9px 14px;display:inline-flex;align-items:center;gap:7px;font-size:.82rem;min-height:44px;
+}
+.gear:hover{background:var(--brass);color:var(--ink);}
+.gear svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;}
+
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;}
+.hero img{width:104px;height:104px;border-radius:22px;margin-bottom:16px;box-shadow:0 14px 40px rgba(0,0,0,.35);}
+.hero .hello{font-size:.76rem;color:var(--brass);letter-spacing:2.6px;font-family:'IBM Plex Mono',monospace;}
+.hero h1{
+  font-family:'Roboto Slab',serif;font-weight:700;margin:8px 0 0;
+  font-size:clamp(2.1rem, 11vw, 3.4rem);line-height:1.05;letter-spacing:1px;
+}
+.hero .rule{width:74px;height:3px;background:var(--ledger-red);border-radius:2px;margin:18px 0 2px;}
+.hero p{color:#C9CED6;font-size:.92rem;line-height:1.6;max-width:30ch;margin:8px 0 0;}
+
+.actions{display:flex;flex-direction:column;gap:11px;margin-top:34px;width:100%;max-width:360px;}
+.big{
+  width:100%;min-height:54px;border-radius:12px;border:none;font-size:1rem;font-weight:700;
+  font-family:'Roboto Slab',serif;letter-spacing:.4px;background:var(--ledger-red);color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;text-decoration:none;
+}
+.big:hover{background:#7f231e;}
+.big:disabled{opacity:.45;cursor:default;}
+.big.line{background:transparent;border:1px solid rgba(251,248,242,.35);color:var(--paper);font-weight:600;}
+.big.line:hover{background:rgba(251,248,242,.1);}
+.foot{text-align:center;font-size:.78rem;color:#98A0AC;line-height:1.6;margin-top:20px;padding:0 8px;max-width:34ch;}
+.foot b{color:var(--brass);font-weight:600;}
+
+/* ================= SETTINGS ================= */
+#settings{min-height:100dvh;}
+.sbar{
+  position:sticky;top:0;z-index:20;background:var(--ink);color:var(--paper);
+  padding:calc(12px + var(--safe-t)) 16px 12px;border-bottom:3px solid var(--ledger-red);
+  display:flex;align-items:center;gap:10px;
+}
+.sbar h2{font-family:'Roboto Slab',serif;font-size:1.24rem;margin:0;letter-spacing:.5px;}
+.back{background:none;border:none;color:var(--brass);font-size:1.3rem;padding:6px 8px;border-radius:8px;line-height:1;}
+.wrap{max-width:760px;margin:0 auto;padding:14px 14px calc(30px + var(--safe-b));}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 15px;margin-bottom:12px;}
+.card h3{font-family:'Roboto Slab',serif;font-size:.95rem;margin:0 0 11px;border-bottom:2px solid var(--ledger-red);padding-bottom:7px;}
+.hint{font-size:.76rem;color:var(--slate);line-height:1.55;margin:0 0 11px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.grid2>*{min-width:0;}
+@media (max-width:339px){.grid2{grid-template-columns:1fr;gap:0;}}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+.field label{font-size:.72rem;color:var(--slate);font-weight:600;}
+.field input,.field select,.field textarea{
+  width:100%;max-width:100%;min-width:0;padding:11px 12px;border:1px solid var(--line);
+  border-radius:9px;background:#fff;min-height:46px;
+}
+.field textarea{min-height:82px;resize:vertical;line-height:1.5;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:var(--brass);}
+.btn{width:auto;border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:9px;padding:11px 15px;font-size:.86rem;font-weight:600;min-height:46px;}
+.btn:hover{background:var(--ink);color:#fff;}
+.btn.primary{background:var(--ledger-red);border-color:var(--ledger-red);color:#fff;font-family:'Roboto Slab',serif;font-weight:700;}
+.btn.primary:hover{background:#7f231e;}
+.btn.ghost{border-color:var(--line);color:var(--slate);}
+.btn.ghost:hover{background:var(--shade);color:var(--ink);}
+.btn.block{width:100%;}
+.btn-row{display:flex;gap:9px;flex-wrap:wrap;}
+.btn-row>*{min-width:0;}
+.note{font-size:.76rem;color:var(--slate);margin:11px 0 0;line-height:1.55;}
+.note.ok{color:var(--ok);} .note.err{color:var(--danger);}
+
+#toast{
+  position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(20px + var(--safe-b));
+  z-index:120;background:var(--ink);color:#fff;padding:11px 16px;border-radius:11px;font-size:.85rem;
+  max-width:88vw;text-align:center;opacity:0;pointer-events:none;transition:all .22s;line-height:1.45;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.ok{background:var(--ok);} #toast.err{background:var(--danger);}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<!-- ================= WELCOME ================= -->
+<div id="welcome">
+  <div class="top">
+    <button class="gear" onclick="showSettings()">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.5 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 15H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 8.5l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.6V4a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>
+      Settings
+    </button>
+  </div>
+
+  <div class="hero">
+    <img src="icon-512.png" alt="">
+    <div class="hello">WELCOME TO</div>
+    <h1 id="heroName">SHANI TRADERS</h1>
+    <div class="rule"></div>
+    <p>GST billing that keeps working when the network does not.</p>
+
+    <div class="actions">
+      <button class="big" id="installBtn" onclick="installApp()">Install app</button>
+      <a class="big line" href="app.html">Open billing</a>
+    </div>
+    <p class="foot" id="installNote"></p>
+  </div>
+</div>
+
+<!-- ================= SETTINGS ================= -->
+<div id="settings" class="hidden">
+  <div class="sbar">
+    <button class="back" onclick="showWelcome()" aria-label="Back">&#8592;</button>
+    <h2>Settings</h2>
+  </div>
+  <div class="wrap">
+
+    <div class="card">
+      <h3>Shop details on the invoice</h3>
+      <div class="field"><label for="cShopName">Business name</label><input id="cShopName"></div>
+      <div class="field"><label for="cShopSub">Address and phone</label><textarea id="cShopSub" rows="3"></textarea></div>
+      <div class="grid2">
+        <div class="field"><label for="cGstin">GSTIN</label><input id="cGstin" style="text-transform:uppercase"></div>
+        <div class="field"><label for="cHomeState">Home state</label><select id="cHomeState"></select></div>
+      </div>
+      <div class="field"><label for="cBank">Bank line on the invoice (optional)</label><input id="cBank" placeholder="A/c 1234567890, IFSC SBIN0001234, SBI Saraipali"></div>
+      <div class="field"><label for="cTerms">Terms printed at the bottom</label><textarea id="cTerms" rows="4"></textarea></div>
+      <button class="btn primary block" onclick="saveShop()">Save shop details</button>
+    </div>
+
+    <div class="card">
+      <h3>Google Sheet connection</h3>
+      <p class="hint">The web app URL from Apps Script, ending in /exec. Find it under Deploy, then Manage deployments.</p>
+      <div class="field"><label for="cUrl">Apps Script web app URL</label><input id="cUrl" placeholder="https://script.google.com/macros/s/.../exec"></div>
+      <div class="field"><label for="cToken">Access word (optional)</label><input id="cToken" placeholder="Must match SHARED_TOKEN in Code.gs"></div>
+      <div class="btn-row">
+        <button class="btn primary" onclick="saveConnection()">Save</button>
+        <button class="btn" onclick="testConnection()">Test connection</button>
+      </div>
+      <p class="note" id="connNote"></p>
+    </div>
+
+    <div class="card">
+      <h3>Bill numbering</h3>
+      <p class="hint">If bills were already made in other software, set the number the next bill should carry. It is padded to five digits, so 431 becomes ST00431.</p>
+      <div class="field"><label for="cStartNo">Next bill number</label><input id="cStartNo" type="number" inputmode="numeric" min="1" placeholder="e.g. 431"></div>
+      <button class="btn primary block" onclick="setStartNumber()">Set next bill number</button>
+      <p class="note" id="numNote"></p>
+    </div>
+
+    <div class="card">
+      <h3>Backup</h3>
+      <p class="hint">Everything already lives in your Google Sheet. This file is a second copy of what is held on this phone, including anything still waiting to sync.</p>
+      <div class="btn-row">
+        <button class="btn" onclick="exportBackup()">Download backup file</button>
+        <button class="btn ghost" onclick="location.reload()">Reload</button>
+      </div>
+      <p class="note" id="stateNote"></p>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Same storage keys as the billing app — one origin, one set of settings. */
+const K = {cfg:'st.cfg', cat:'st.catalog', cust:'st.customers', inv:'st.invoices',
+           q:'st.queue', next:'st.next', sync:'st.lastSync'};
+
+const DEFAULT_CONFIG = {
+  shopName : "SHANI TRADERS",
+  shopSub  : "Main Road Patsendri, Saraipali, Mahasamund, C.G. 493558\nMob No. 9399893129",
+  gstin    : "22HEPPP0273E1ZH",
+  homeState: "Chhattisgarh",
+  bank     : "",
+  terms    : "1) Risk and title of goods pass to the buyer on delivery.\n2) Report any discrepancy within 48 hours of delivery.\n3) Subject to local jurisdiction only.",
+  scriptUrl: "https://script.google.com/macros/s/AKfycbw0XU2o_knZz8sgta_wgpHcfeTOe16ux0HhqK0AHRpmlGSXqETTCoeGXNKdHELTQzcUfA/exec",
+  token    : ""
+};
+const STATES = ["Chhattisgarh","Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Goa","Gujarat","Haryana",
+"Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram",
+"Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand",
+"West Bengal","Delhi","Jammu and Kashmir","Ladakh","Puducherry","Chandigarh","Andaman and Nicobar Islands"];
+
+function load(k,d){ try{ const v=localStorage.getItem(k); return v===null? d : JSON.parse(v); }catch(e){ return d; } }
+function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ toast('Device storage is full.','err'); return false; } }
+let CFG = Object.assign({}, DEFAULT_CONFIG, load(K.cfg, {}));
+function val(id){ const e=document.getElementById(id); return e? e.value : ''; }
+
+let tTimer;
+function toast(msg, cls){
+  const t=document.getElementById('toast');
+  t.innerHTML=msg; t.className='show '+(cls||'');
+  clearTimeout(tTimer); tTimer=setTimeout(()=>{ t.className=''; }, cls==='err'?5200:3000);
+}
+
+/* ---------- views ---------- */
+function showSettings(){
+  document.getElementById('welcome').classList.add('hidden');
+  document.getElementById('settings').classList.remove('hidden');
+  if(location.hash !== '#settings') location.hash = 'settings';
+  fillSettings();
+  window.scrollTo(0,0);
+}
+function showWelcome(){
+  document.getElementById('settings').classList.add('hidden');
+  document.getElementById('welcome').classList.remove('hidden');
+  if(location.hash) history.replaceState(null, '', location.pathname + location.search);
+  window.scrollTo(0,0);
+}
+
+function fillSettings(){
+  document.getElementById('cShopName').value = CFG.shopName||'';
+  document.getElementById('cShopSub').value  = CFG.shopSub||'';
+  document.getElementById('cGstin').value    = CFG.gstin||'';
+  document.getElementById('cBank').value     = CFG.bank||'';
+  document.getElementById('cTerms').value    = CFG.terms||'';
+  document.getElementById('cUrl').value      = CFG.scriptUrl||'';
+  document.getElementById('cToken').value    = CFG.token||'';
+  document.getElementById('cHomeState').innerHTML =
+    STATES.map(s => '<option'+(s===CFG.homeState?' selected':'')+'>'+s+'</option>').join('');
+
+  const next = load(K.next, null);
+  const sn = document.getElementById('cStartNo');
+  sn.value = ''; sn.placeholder = next ? 'Currently ' + next : 'e.g. 431';
+  document.getElementById('numNote').textContent = next
+    ? 'The next bill is set to ' + next + '.'
+    : 'Test the connection above to read the current number from the sheet.';
+
+  const q = load(K.q, {invoices:[],customers:[],catalogDirty:false});
+  const waiting = (q.invoices||[]).length + (q.customers||[]).length;
+  const last = load(K.sync, 0);
+  document.getElementById('stateNote').textContent =
+    load(K.inv,[]).length + ' bill(s) held on this phone, ' + load(K.cat,[]).length + ' items, ' +
+    (waiting ? waiting + ' still waiting to sync. ' : 'nothing waiting to sync. ') +
+    (last ? 'Last sync ' + new Date(last).toLocaleString('en-IN') + '.' : '');
+}
+
+function saveShop(){
+  CFG.shopName = val('cShopName').trim();
+  CFG.shopSub  = document.getElementById('cShopSub').value;
+  CFG.gstin    = val('cGstin').trim().toUpperCase();
+  CFG.homeState= val('cHomeState');
+  CFG.bank     = val('cBank').trim();
+  CFG.terms    = document.getElementById('cTerms').value;
+  save(K.cfg, CFG);
+  document.getElementById('heroName').textContent = (CFG.shopName||'SHANI TRADERS').toUpperCase();
+  toast('Shop details saved.','ok');
+}
+
+/* ---------- sheet ---------- */
+function apiUrl(params){
+  const u = CFG.scriptUrl; if(!u) return '';
+  const q = Object.assign({}, params||{});
+  if(CFG.token) q.token = CFG.token;
+  const s = Object.keys(q).map(k => encodeURIComponent(k)+'='+encodeURIComponent(q[k])).join('&');
+  return u + (s ? (u.includes('?')?'&':'?') + s : '');
+}
+async function apiPost(body){
+  const payload = Object.assign({}, body);
+  if(CFG.token) payload.token = CFG.token;
+  const res = await fetch(CFG.scriptUrl, {method:'POST', redirect:'follow',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload)});
+  return await res.json();
+}
+
+function saveConnection(){
+  CFG.scriptUrl = val('cUrl').trim();
+  CFG.token     = val('cToken').trim();
+  save(K.cfg, CFG);
+  toast('Connection saved.','ok');
+  testConnection();
+}
+async function testConnection(){
+  const note = document.getElementById('connNote');
+  if(!CFG.scriptUrl){ note.textContent = 'Paste the /exec URL first.'; note.className = 'note err'; return; }
+  note.innerHTML = '<span class="spin"></span> Checking'; note.className = 'note';
+  try{
+    const r = await (await fetch(apiUrl({action:'bootstrap', limit:1}))).json();
+    if(r && r.success){
+      if(r.invoiceNo) save(K.next, r.invoiceNo);
+      note.textContent = 'Connected. Next bill number is ' + r.invoiceNo + ', with ' + (r.items||[]).length +
+                         ' items and ' + (r.customers||[]).length + ' customers on the sheet.';
+      note.className = 'note ok';
+      fillSettings();
+    } else {
+      note.textContent = 'The sheet answered with: ' + ((r && r.error) || 'an unknown error');
+      note.className = 'note err';
+    }
+  }catch(e){
+    note.textContent = 'Could not reach the sheet. Check the URL, that the deployment is set to Anyone, and your connection.';
+    note.className = 'note err';
+  }
+}
+
+async function setStartNumber(){
+  const n = parseInt(val('cStartNo'), 10);
+  const note = document.getElementById('numNote');
+  if(!n || n < 1){ toast('Enter the number the next bill should carry.','err'); return; }
+  if(!CFG.scriptUrl){ toast('Save the Apps Script URL first.','err'); return; }
+  const asText = 'ST' + String(n).padStart(5,'0');
+  if(!confirm('The next bill will be numbered ' + asText + '. Continue?')) return;
+  note.innerHTML = '<span class="spin"></span> Setting'; note.className = 'note';
+  try{
+    const r = await apiPost({action:'setStartNumber', next:n});
+    if(r && r.success){
+      save(K.next, r.nextInvoiceNo);
+      const clash = r.highestUsed && parseInt(String(r.highestUsed).replace(/\D/g,''), 10) >= n;
+      note.textContent = clash
+        ? 'Set to ' + r.nextInvoiceNo + ', but the sheet already holds ' + r.highestUsed + '. Numbers will repeat unless you raise this.'
+        : 'Done. The next bill will be ' + r.nextInvoiceNo + '.';
+      note.className = 'note ' + (clash ? 'err' : 'ok');
+      document.getElementById('cStartNo').value = '';
+      document.getElementById('cStartNo').placeholder = 'Currently ' + r.nextInvoiceNo;
+    } else {
+      note.textContent = 'The sheet answered with: ' + ((r && r.error) || 'an unknown error');
+      note.className = 'note err';
+    }
+  }catch(e){ note.textContent = 'Could not reach the sheet.'; note.className = 'note err'; }
+}
+
+function exportBackup(){
+  const data = {config:CFG, catalog:load(K.cat,[]), customers:load(K.cust,[]),
+                invoices:load(K.inv,[]), queue:load(K.q,{}), nextInvoiceNo:load(K.next,null)};
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const d = new Date();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'shani-backup-' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* ---------- install ---------- */
+let deferredPrompt = null;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  const b = document.getElementById('installBtn');
+  b.disabled = false;
+  document.getElementById('installNote').textContent =
+    'Adds a Shani Traders icon to your home screen. It then opens straight into billing.';
+});
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  document.getElementById('installBtn').classList.add('hidden');
+  document.getElementById('installNote').innerHTML = 'Installed. Open <b>Shani Traders</b> from your home screen.';
+});
+
+async function installApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    const res = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    if(res && res.outcome !== 'accepted')
+      document.getElementById('installNote').textContent =
+        'Not installed. Tap Install again any time, or just use Open billing.';
+    return;
+  }
+  toast('Use your browser menu to add this page to the home screen.');
+}
+
+function paintInstallState(){
+  const btn  = document.getElementById('installBtn');
+  const note = document.getElementById('installNote');
+  const ua = navigator.userAgent;
+  if(isStandalone){
+    btn.classList.add('hidden');
+    note.textContent = 'Already installed on this device.';
+  } else if(/iPhone|iPad|iPod/.test(ua)){
+    btn.classList.add('hidden');
+    note.innerHTML = 'On iPhone, open this page in <b>Safari</b>, tap Share, then <b>Add to Home Screen</b>.';
+  } else {
+    btn.disabled = true;
+    note.innerHTML = 'If the button stays greyed out, use the browser menu and tap <b>Install app</b> or <b>Add to Home screen</b>.';
+  }
+}
+
+/* ---------- boot ---------- */
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('heroName').textContent = (CFG.shopName||'SHANI TRADERS').toUpperCase();
+
+  // Launched from the home screen? Go straight to billing.
+  if(isStandalone && location.hash !== '#settings'){ location.replace('app.html'); return; }
+
+  paintInstallState();
+  if(location.hash === '#settings') showSettings();
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+});
+
+window.addEventListener('hashchange', () => {
+  if(location.hash === '#settings') showSettings(); else showWelcome();
+});
+</script>
+</body>
+</html>
