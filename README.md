@@ -148,6 +148,33 @@ bill the server no longer has is cleared from the phone too. Bills still waiting
 to go up are never touched, and if the reply is capped at 300 rows the older
 tail is left alone rather than wrongly deleted.
 
+## Extra charges and credit sales
+
+Below the items there are three optional boxes: **Transport charges**,
+**Labour charges** and **Credit amount**.
+
+Transport and labour are added to the bill total exactly as typed, with no GST
+on them, so the taxable value and the rate-wise tax summary stay untouched. Both
+appear as their own lines just above the total — inside the totals block on a GST
+invoice, and as table lines on a non-GST bill. Zero means they are left off the
+bill entirely.
+
+Credit is the amount left unpaid; the rest counts as received. A bill with
+nothing in that box prints as before. With a figure in it, the PDF shows
+**Received** and **Balance due** beside the total, and the bill is added to the
+debtors record.
+
+The debtors record lives in the sheet, in the **Credit** column. There is no
+outstanding view in the app — the Parties tab is just customers, as before.
+History tiles do carry a red "₹X due" tag so an unpaid bill is easy to spot, and
+opening one gives a **Record payment** button that lowers the Credit figure on
+that row. Edit the column in the sheet directly if you prefer; the app picks it
+up on the next Refresh. Payments queue like everything else, so they survive
+being recorded with no signal.
+
+**Clear all** now wipes the whole bill — buyer name, mobile, address, GSTIN,
+items and all three charge boxes — and asks first, since it cannot be undone.
+
 ## Nothing is lost, by design
 
 Every bill is written to the phone *before* the network is touched, and the
